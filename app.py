@@ -1,9 +1,10 @@
 import sqlite3
-from flask import Flask, render_template, request, redirect, url_for
-from werkzeug.security import generate_password_hash
+from flask import Flask, render_template, request, redirect, url_for, session
+from werkzeug.security import generate_password_hash, check_password_hash
 from database.db import init_db, get_db
 
 app = Flask(__name__)
+app.secret_key = "spendly-dev-secret"  # replace with env var before production
 init_db()
 
 
@@ -47,9 +48,30 @@ def register():
     return redirect(url_for("login"))
 
 
-@app.route("/login")
+@app.route("/login", methods=["GET", "POST"])
 def login():
-    return render_template("login.html")
+    if request.method == "GET":
+        return render_template("login.html")
+
+    email    = request.form.get("email",    "").strip()
+    password = request.form.get("password", "").strip()
+
+    if not email:
+        return render_template("login.html", error="Email is required.")
+    if not password:
+        return render_template("login.html", error="Password is required.")
+
+    db   = get_db()
+    user = db.execute(
+        "SELECT id, name, password_hash FROM users WHERE email = ?", (email,)
+    ).fetchone()
+
+    if user is None or not check_password_hash(user["password_hash"], password):
+        return render_template("login.html", error="Invalid email or password.")
+
+    session["user_id"]   = user["id"]
+    session["user_name"] = user["name"]
+    return redirect(url_for("landing"))
 
 
 # ------------------------------------------------------------------ #
@@ -68,12 +90,47 @@ def privacy():
 
 @app.route("/logout")
 def logout():
-    return "Logout — coming in Step 3"
+    session.clear()
+    return redirect(url_for("landing"))
 
 
 @app.route("/profile")
 def profile():
-    return "Profile page — coming in Step 4"
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+
+    db = get_db()
+    user = db.execute("SELECT name, email, created_at FROM users WHERE id = ?",
+                      (session["user_id"],)).fetchone()
+
+    total_spent = db.execute(
+        "SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE user_id = ?",
+        (session["user_id"],)).fetchone()[0]
+
+    this_month = db.execute(
+        "SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE user_id = ? AND strftime('%Y-%m', date) = strftime('%Y-%m', 'now')",
+        (session["user_id"],)).fetchone()[0]
+
+    tx_count = db.execute(
+        "SELECT COUNT(*) FROM expenses WHERE user_id = ?",
+        (session["user_id"],)).fetchone()[0]
+
+    recent = db.execute(
+        "SELECT category, description, amount, date FROM expenses WHERE user_id = ? ORDER BY date DESC LIMIT 5",
+        (session["user_id"],)).fetchall()
+
+    categories = db.execute(
+        "SELECT category, SUM(amount) as total FROM expenses WHERE user_id = ? GROUP BY category ORDER BY total DESC",
+        (session["user_id"],)).fetchall()
+
+    return render_template("profile.html",
+        user=user,
+        total_spent=total_spent,
+        this_month=this_month,
+        tx_count=tx_count,
+        recent=recent,
+        categories=categories
+    )
 
 
 @app.route("/expenses/add")
