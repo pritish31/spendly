@@ -1,6 +1,6 @@
 # Spendly
 
-A personal expense tracker built with Flask and SQLite. Track every rupee, know where it goes.
+A personal expense tracker built with Flask and SQLite. Track every dollar, know where it goes.
 
 ## Tech Stack
 
