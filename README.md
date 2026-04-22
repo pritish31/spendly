@@ -6,7 +6,7 @@ A personal expense tracker built with Flask and SQLite. Track every rupee, know 
 
 - **Backend:** Python, Flask
 - **Database:** SQLite (raw `sqlite3`, no ORM)
-- **Frontend:** Jinja2 templates, vanilla CSS, vanilla JS
+- **Frontend:** Jinja2 templates, Vanilla CSS, Vanilla JS
 - **Auth:** Flask sessions + Werkzeug password hashing
 
 ## Getting Started
