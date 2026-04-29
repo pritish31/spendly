@@ -1,85 +1,126 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard — Spendly{% endblock %}
+{% block title %}Profile — Spendly{% endblock %}
 
 {% block head %}
 <style>
-.dashboard {
+/* ── Layout ─────────────────────────────────────────── */
+.profile-page {
     max-width: var(--max-width);
     margin: 0 auto;
     padding: 3rem 2rem;
 }
 
-.dashboard-header {
+/* ── Alert banner ───────────────────────────────────── */
+.profile-alert {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    margin-bottom: 1.75rem;
+}
+.profile-alert svg { width: 16px; height: 16px; flex-shrink: 0; }
+.profile-alert-success { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+
+/* ── Hero ───────────────────────────────────────────── */
+.profile-hero {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
     margin-bottom: 2.5rem;
 }
-
-.dashboard-greeting {
-    font-family: var(--font-display);
-    font-size: clamp(1.75rem, 3vw, 2.5rem);
-    color: var(--ink);
-    margin-bottom: 0.35rem;
-}
-
-.dashboard-greeting em {
-    font-style: italic;
+.profile-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--accent-light);
     color: var(--accent);
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 2px solid rgba(26, 71, 42, 0.15);
+    letter-spacing: -0.02em;
+    user-select: none;
 }
-
-.dashboard-sub {
-    font-size: 0.95rem;
+.profile-name {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    color: var(--ink);
+    margin-bottom: 0.2rem;
+}
+.profile-email {
+    font-size: 0.9rem;
     color: var(--ink-muted);
+    margin-bottom: 0.6rem;
 }
+.profile-since-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: var(--accent-light);
+    color: var(--accent);
+    font-size: 0.78rem;
+    font-weight: 500;
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid rgba(26, 71, 42, 0.15);
+}
+.profile-since-badge svg { width: 12px; height: 12px; }
 
-.stat-grid {
+/* ── Stats strip ────────────────────────────────────── */
+.profile-stats {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 1.25rem;
-    margin-bottom: 2.5rem;
-}
-
-.stat-card {
+    gap: 0;
+    margin-bottom: 2rem;
     background: var(--paper-card);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
-    padding: 1.5rem;
+    overflow: hidden;
 }
-
+.stat-cell {
+    padding: 1.5rem 2rem;
+    border-right: 1px solid var(--border);
+}
+.stat-cell:last-child { border-right: none; }
 .stat-label {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     color: var(--ink-muted);
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.4rem;
 }
-
 .stat-value {
     font-family: var(--font-display);
-    font-size: 2rem;
+    font-size: 1.9rem;
     color: var(--ink);
     line-height: 1.1;
+    font-variant-numeric: tabular-nums;
 }
+.stat-value .currency { font-size: 1.2rem; color: var(--ink-muted); }
 
-.stat-value .currency {
-    font-size: 1.25rem;
-    color: var(--ink-muted);
-}
-
-.dashboard-grid {
+/* ── Data grid ──────────────────────────────────────── */
+.profile-data-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 3fr 2fr;
     gap: 1.5rem;
+    margin-bottom: 2rem;
 }
 
+/* ── Panel ──────────────────────────────────────────── */
 .panel {
     background: var(--paper-card);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
     padding: 1.5rem;
 }
-
 .panel-title {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.06em;
@@ -87,154 +128,227 @@
     margin-bottom: 1.25rem;
 }
 
-.expense-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.65rem 0;
-    border-bottom: 1px solid var(--border-soft);
-    font-size: 0.9rem;
+/* ── Transactions table ─────────────────────────────── */
+.tx-table {
+    width: 100%;
+    border-collapse: collapse;
 }
-
-.expense-row:last-child { border-bottom: none; }
-
-.expense-info { display: flex; flex-direction: column; gap: 0.1rem; }
-
-.expense-cat {
+.tx-table th {
     font-size: 0.72rem;
     font-weight: 600;
-    color: var(--accent);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.expense-desc { color: var(--ink-soft); }
-
-.expense-right { text-align: right; }
-
-.expense-amount {
-    font-weight: 600;
-    color: var(--ink);
-}
-
-.expense-date {
-    font-size: 0.75rem;
+    letter-spacing: 0.07em;
     color: var(--ink-faint);
+    text-align: left;
+    padding: 0 0 0.75rem;
+    border-bottom: 1px solid var(--border);
+}
+.tx-table th.col-amount { text-align: right; }
+.tx-table td {
+    padding: 0.7rem 0;
+    font-size: 0.875rem;
+    color: var(--ink-soft);
+    border-bottom: 1px solid var(--border-soft);
+    vertical-align: middle;
+}
+.tx-table tr:last-child td { border-bottom: none; }
+.tx-table tr:hover td { background: var(--paper); }
+.tx-date  { color: var(--ink-muted); white-space: nowrap; padding-right: 1rem; }
+.tx-desc  { color: var(--ink-soft); }
+.tx-cat   { padding-right: 0.5rem; }
+.tx-amount {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    color: var(--ink);
+    white-space: nowrap;
 }
 
-.cat-row {
-    margin-bottom: 0.9rem;
+/* ── Category pills ─────────────────────────────────── */
+.cat-pill {
+    display: inline-block;
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
 }
+.cat-food          { background: #e8f5e9; color: #2e7d32; }
+.cat-transport     { background: #fff8e1; color: #b8860b; }
+.cat-bills         { background: #f0f0f0; color: #4a4a4a; }
+.cat-health        { background: #fce4ec; color: #c62828; }
+.cat-entertainment { background: #ede7f6; color: #5e35b1; }
+.cat-shopping      { background: #fff3e0; color: #e65100; }
+.cat-other         { background: #eceff1; color: #546e7a; }
 
+/* ── Category breakdown bars ────────────────────────── */
+.cat-row { margin-bottom: 1rem; }
 .cat-row:last-child { margin-bottom: 0; }
-
 .cat-header {
     display: flex;
     justify-content: space-between;
-    font-size: 0.85rem;
+    align-items: baseline;
     margin-bottom: 0.35rem;
 }
-
-.cat-name { color: var(--ink-soft); font-weight: 500; }
-.cat-amt  { color: var(--ink-muted); }
-
+.cat-name  { font-size: 0.85rem; color: var(--ink-soft); font-weight: 500; }
+.cat-total { font-size: 0.82rem; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
 .bar-track {
-    height: 8px;
+    height: 7px;
     background: var(--border-soft);
     border-radius: 999px;
     overflow: hidden;
 }
+.bar-fill { height: 100%; border-radius: 999px; }
+.bar-food          { background: #3a8a5a; }
+.bar-transport     { background: #c17f24; }
+.bar-bills         { background: #4a4a4a; }
+.bar-health        { background: #e07070; }
+.bar-entertainment { background: #7c6abf; }
+.bar-shopping      { background: #4a90d9; }
+.bar-other         { background: #8a9baa; }
 
-.bar-fill {
-    height: 100%;
-    background: var(--accent);
-    border-radius: 999px;
-}
-
-.empty-state {
-    text-align: center;
-    padding: 2rem 0;
-    color: var(--ink-muted);
-    font-size: 0.9rem;
-}
-
+/* ── Responsive ─────────────────────────────────────── */
 @media (max-width: 900px) {
-    .stat-grid        { grid-template-columns: 1fr 1fr; }
-    .dashboard-grid   { grid-template-columns: 1fr; }
+    .profile-data-grid { grid-template-columns: 1fr; }
 }
-
 @media (max-width: 600px) {
-    .stat-grid { grid-template-columns: 1fr; }
-    .dashboard { padding: 2rem 1rem; }
+    .profile-stats { grid-template-columns: 1fr; }
+    .stat-cell     { border-right: none; border-bottom: 1px solid var(--border); }
+    .stat-cell:last-child { border-bottom: none; }
+    .profile-page  { padding: 2rem 1rem; }
+}
+@media (max-width: 480px) {
+    .profile-hero { flex-direction: column; text-align: center; }
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="dashboard">
+<div class="profile-page">
 
-    <div class="dashboard-header">
-        <h1 class="dashboard-greeting">Welcome back, <em>{{ user.name.split()[0] }}</em></h1>
-        <p class="dashboard-sub">Here's a snapshot of your finances.</p>
+    {% if success %}
+    <div class="profile-alert profile-alert-success">
+        <i data-lucide="check-circle"></i>
+        {{ success }}
+    </div>
+    {% endif %}
+
+    <!-- Hero -->
+    <div class="profile-hero">
+        <div class="profile-avatar">
+            {%- set parts = user.name.split() -%}
+            {{- parts[0][0] | upper -}}
+            {%- if parts | length > 1 %}{{ parts[-1][0] | upper }}{% endif -%}
+        </div>
+        <div>
+            <h1 class="profile-name">{{ user.name }}</h1>
+            <p class="profile-email">{{ user.email }}</p>
+            <span class="profile-since-badge">
+                <i data-lucide="calendar"></i>
+                Member since {{ member_since }}
+            </span>
+        </div>
     </div>
 
-    <div class="stat-grid">
-        <div class="stat-card">
+    <!-- Stats strip -->
+    <div class="profile-stats">
+        <div class="stat-cell">
             <div class="stat-label">Total spent</div>
-            <div class="stat-value"><span class="currency">₹</span>{{ "{:,.0f}".format(total_spent) }}</div>
+            <div class="stat-value"><span class="currency">₹</span>{{ "{:,.2f}".format(total_spent) }}</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-label">This month</div>
-            <div class="stat-value"><span class="currency">₹</span>{{ "{:,.0f}".format(this_month) }}</div>
-        </div>
-        <div class="stat-card">
+        <div class="stat-cell">
             <div class="stat-label">Transactions</div>
             <div class="stat-value">{{ tx_count }}</div>
         </div>
+        <div class="stat-cell">
+            <div class="stat-label">Top category</div>
+            <div class="stat-value">{{ top_category }}</div>
+        </div>
     </div>
 
-    <div class="dashboard-grid">
+    <!-- Transactions + Category breakdown -->
+    <div class="profile-data-grid">
 
+        <!-- Recent transactions -->
         <div class="panel">
-            <div class="panel-title">Recent expenses</div>
+            <div class="panel-title">Recent Transactions</div>
             {% if recent %}
-                {% for e in recent %}
-                <div class="expense-row">
-                    <div class="expense-info">
-                        <span class="expense-cat">{{ e.category }}</span>
-                        <span class="expense-desc">{{ e.description or '—' }}</span>
-                    </div>
-                    <div class="expense-right">
-                        <div class="expense-amount">₹{{ "{:,.2f}".format(e.amount) }}</div>
-                        <div class="expense-date">{{ e.date }}</div>
-                    </div>
-                </div>
-                {% endfor %}
+            <table class="tx-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Category</th>
+                        <th class="col-amount">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for e in recent %}
+                    <tr>
+                        <td class="tx-date">{{ e.date | dateformat }}</td>
+                        <td class="tx-desc">{{ e.description or '—' }}</td>
+                        <td class="tx-cat">
+                            <span class="cat-pill cat-{{ e.category | lower }}">{{ e.category }}</span>
+                        </td>
+                        <td class="tx-amount">₹{{ "{:,.2f}".format(e.amount) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
             {% else %}
-                <div class="empty-state">No expenses yet.</div>
+            <p style="color:var(--ink-muted);font-size:0.9rem;text-align:center;padding:2rem 0">No transactions yet.</p>
             {% endif %}
         </div>
 
+        <!-- By category -->
         <div class="panel">
-            <div class="panel-title">Spending by category</div>
+            <div class="panel-title">By Category</div>
             {% if categories %}
                 {% set max_amt = categories[0].total %}
                 {% for c in categories %}
                 <div class="cat-row">
                     <div class="cat-header">
                         <span class="cat-name">{{ c.category }}</span>
-                        <span class="cat-amt">₹{{ "{:,.0f}".format(c.total) }}</span>
+                        <span class="cat-total">₹{{ "{:,.2f}".format(c.total) }}</span>
                     </div>
                     <div class="bar-track">
-                        <div class="bar-fill" style="width: {{ (c.total / max_amt * 100) | round | int }}%"></div>
+                        <div class="bar-fill bar-{{ c.category | lower }}"
+                             style="width: {{ (c.total / max_amt * 100) | round | int }}%"></div>
                     </div>
                 </div>
                 {% endfor %}
             {% else %}
-                <div class="empty-state">No data yet.</div>
+            <p style="color:var(--ink-muted);font-size:0.9rem;text-align:center;padding:2rem 0">No data yet.</p>
             {% endif %}
         </div>
 
     </div>
+
+    <!-- Settings link -->
+    <div style="text-align:right; margin-top: -1rem; margin-bottom: 0.5rem;">
+        <a href="{{ url_for('settings') }}" class="btn-ghost" style="font-size:0.875rem; display:inline-flex; align-items:center; gap:0.4rem;">
+            <i data-lucide="settings"></i> Account settings
+        </a>
+    </div>
+
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+    lucide.createIcons();
+
+    const overlay = document.getElementById('deleteOverlay');
+    document.getElementById('openDeleteModal').addEventListener('click', () => {
+        overlay.classList.add('active');
+    });
+    document.getElementById('cancelDelete').addEventListener('click', () => {
+        overlay.classList.remove('active');
+    });
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.classList.remove('active');
+    });
+</script>
 {% endblock %}
